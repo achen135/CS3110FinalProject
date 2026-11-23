@@ -7,11 +7,13 @@ let pen_width = 4 * scale
 (* Size of the drawing area on screen, in window pixels. *)
 let area_w = Drawing.width * scale
 let area_h = Drawing.height * scale
+let displayed_text = ref ""
 
 let open_window () =
   open_graph (Printf.sprintf " %dx%d" area_w (area_h + text_height));
   set_window_title "Quickdraw";
-  auto_synchronize false
+  auto_synchronize false;
+  displayed_text := ""
 
 let close_window () = try close_graph () with Graphic_failure _ -> ()
 
@@ -25,18 +27,7 @@ let draw_stroke stroke =
       moveto x y;
       List.iter (fun (x, y) -> lineto x y) rest
 
-let render d =
-  set_color white;
-  fill_rect 0 0 area_w area_h;
-  set_color black;
-  set_line_width pen_width;
-  List.iter draw_stroke (Drawing.strokes d);
-  set_line_width 1;
-  moveto 0 area_h;
-  lineto area_w area_h;
-  synchronize ()
-
-let show_text s =
+let draw_text s =
   set_color (rgb 230 230 230);
   fill_rect 0 (area_h + 1) area_w (text_height - 1);
   set_color black;
@@ -47,7 +38,25 @@ let show_text s =
     (fun i line ->
       moveto 8 (area_h + text_height - ((i + 1) * (line_h + 4)));
       draw_string line)
-    lines;
+    lines
+
+let render d =
+  set_color white;
+  fill_rect 0 0 area_w area_h;
+  set_color black;
+  set_line_width pen_width;
+  List.iter draw_stroke (Drawing.strokes d);
+  set_line_width 1;
+  moveto 0 area_h;
+  lineto area_w area_h;
+  (* The pen can extend above the drawing area at its top edge. Repaint the
+     prompt strip before presenting the completed frame. *)
+  draw_text !displayed_text;
+  synchronize ()
+
+let show_text s =
+  draw_text s;
+  displayed_text := s;
   synchronize ()
 
 (* [loop d down] runs the input loop from drawing [d]; [down] records whether

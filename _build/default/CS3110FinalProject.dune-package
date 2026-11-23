@@ -1,4 +1,0 @@
-(lang dune 3.24)
-(name CS3110FinalProject)
-(sections (lib .) (doc ../../doc/CS3110FinalProject))
-(files (lib (META dune-package opam)) (doc (README.md README_ODED_KNN.md)))

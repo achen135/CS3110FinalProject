@@ -1,9 +1,0 @@
-lib: [
-  "_build/install/default/lib/CS3110FinalProject/META"
-  "_build/install/default/lib/CS3110FinalProject/dune-package"
-  "_build/install/default/lib/CS3110FinalProject/opam"
-]
-doc: [
-  "_build/install/default/doc/CS3110FinalProject/README.md"
-  "_build/install/default/doc/CS3110FinalProject/README_ODED_KNN.md"
-]
