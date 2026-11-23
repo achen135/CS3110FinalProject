@@ -62,9 +62,9 @@ val init : Config.t -> words:string list -> state
     pass it in as [words] if you want it.
 
     @raise Invalid_argument
-      if [c.rounds <= 0], [c.time_limit] is not positive, [words] is empty, any
-      word is blank, two words are the same (ignoring case and surrounding
-      whitespace), or [words] has fewer than [c.rounds] words. *)
+    if [c.rounds <= 0], [c.time_limit] is outside the finite positive range,
+    [words] is empty, any word is blank, two words are the same (ignoring case
+    and surrounding whitespace), or [words] has fewer than [c.rounds] words. *)
 
 val shuffle : Random.State.t -> 'a list -> 'a list
 (** [shuffle rng xs] is a uniformly random permutation of [xs]. It is

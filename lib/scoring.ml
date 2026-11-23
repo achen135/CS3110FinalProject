@@ -22,10 +22,10 @@ let clamp_time limit t =
   if Float.is_nan t || t < 0.0 then 0.0 else if t > limit then limit else t
 
 let time_bonus (c : Config.t) time_left =
-  if c.time_limit <= 0.0 then 0
+  if not (Float.is_finite c.time_limit && c.time_limit > 0.0) then 0
   else
     let t = clamp_time c.time_limit time_left in
-    let bonus = float_of_int c.time_bonus_max *. t /. c.time_limit in
+    let bonus = float_of_int c.time_bonus_max *. (t /. c.time_limit) in
     int_of_float (Float.round bonus)
 
 let score_round (c : Config.t) ~rank ~time_left =

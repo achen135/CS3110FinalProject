@@ -52,8 +52,8 @@ let find_duplicate words =
 
 let init (config : Config.t) ~words =
   if config.rounds <= 0 then invalid_arg "Game.init: rounds must be positive";
-  if not (config.time_limit > 0.0) then
-    invalid_arg "Game.init: time_limit must be positive";
+  if not (Float.is_finite config.time_limit && config.time_limit > 0.0) then
+    invalid_arg "Game.init: time_limit must be finite and positive";
   if words = [] then invalid_arg "Game.init: word list is empty";
   if List.exists (fun w -> Scoring.normalize w = "") words then
     invalid_arg "Game.init: word list contains a blank word";

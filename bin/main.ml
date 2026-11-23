@@ -52,12 +52,13 @@ let end_status () =
 let saved_tio : Unix.terminal_io option ref = ref None
 
 let enter_raw_mode () =
-  match Unix.tcgetattr Unix.stdin with
-  | tio ->
+  if not Sys.win32 && Unix.isatty Unix.stdin then
+    try
+      let tio = Unix.tcgetattr Unix.stdin in
       saved_tio := Some tio;
       Unix.tcsetattr Unix.stdin Unix.TCSANOW
         { tio with c_icanon = false; c_echo = false; c_vmin = 1; c_vtime = 0 }
-  | exception Unix.Unix_error _ -> ()
+    with Unix.Unix_error _ -> ()
 
 let restore_terminal () =
   match !saved_tio with
@@ -75,27 +76,31 @@ type input = Line of string | Eof | Nothing
 let pending = Buffer.create 32 (* the line being typed *)
 let ready_lines : string Queue.t = Queue.create () (* lines ended by Enter *)
 let at_eof = ref false
-let in_escape = ref false (* inside an escape sequence such as an arrow key *)
+
+type escape_state = Plain | Escape | Sequence
+
+let escape_state = ref Plain
 
 (* Handle one byte of input as a tiny line editor. *)
-let feed_char c =
-  if !in_escape then
-    (* Escape sequences end with a letter or '~'; drop everything until then. *)
-    begin if (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c = '~' then
-      in_escape := false
-    end
-  else
-    match c with
-    | '\n' ->
-        Queue.push (Buffer.contents pending) ready_lines;
-        Buffer.clear pending
-    | '\127' | '\b' ->
-        let n = Buffer.length pending in
-        if n > 0 then Buffer.truncate pending (n - 1)
-    | '\004' (* Ctrl-D *) -> if Buffer.length pending = 0 then at_eof := true
-    | '\027' -> in_escape := true
-    | c when c >= ' ' -> Buffer.add_char pending c
-    | _ -> () (* other control characters, including '\r' *)
+let rec feed_char c =
+  match (!escape_state, c) with
+  | _, '\027' -> escape_state := Escape
+  | Escape, ('[' | 'O') -> escape_state := Sequence
+  | Sequence, ('@' .. '~') -> escape_state := Plain
+  | Sequence, (' ' .. '?') -> ()
+  | (Escape | Sequence), _ ->
+      (* A standalone Esc or an interrupted sequence leaves this byte intact. *)
+      escape_state := Plain;
+      feed_char c
+  | Plain, '\n' ->
+      Queue.push (Buffer.contents pending) ready_lines;
+      Buffer.clear pending
+  | Plain, ('\127' | '\b') ->
+      let n = Buffer.length pending in
+      if n > 0 then Buffer.truncate pending (n - 1)
+  | Plain, '\004' (* Ctrl-D *) -> if Buffer.length pending = 0 then at_eof := true
+  | Plain, c when c >= ' ' -> Buffer.add_char pending c
+  | Plain, _ -> () (* other control characters, including '\r' *)
 
 let read_buf = Bytes.create 256
 
@@ -323,6 +328,10 @@ let () =
   in
   let usage = "Usage: main.exe [--seed N] [--rounds N] [--time SECONDS]" in
   Arg.parse specs (fun a -> raise (Arg.Bad ("unexpected argument " ^ a))) usage;
+  (* Interactive key-by-key input uses POSIX terminal controls. *)
+  if Sys.win32 && Unix.isatty Unix.stdin then (
+    prerr_endline "Run the interactive terminal demo in WSL: dune exec bin/main.exe";
+    exit 2);
   (* Without --seed, pick a random seed but print it so a game can be
      replayed. *)
   let seed =

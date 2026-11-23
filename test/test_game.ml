@@ -326,6 +326,8 @@ let init_tests =
         init { cfg with time_limit = 0.0 } ~words);
     raises_invalid "NaN time limit" (fun () ->
         init { cfg with time_limit = Float.nan } ~words);
+    raises_invalid "infinite time limit" (fun () ->
+        init { cfg with time_limit = Float.infinity } ~words);
   ]
 
 (* ---------- Shuffle and word order ---------- *)

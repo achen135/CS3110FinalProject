@@ -66,6 +66,12 @@ let score_tests =
     score_test "zero time limit: no bonus, no crash"
       ~config:{ cfg with time_limit = 0.0 }
       (Some 0) 5.0 100;
+    score_test "infinite time limit: no bonus"
+      ~config:{ cfg with time_limit = Float.infinity }
+      (Some 0) Float.infinity 100;
+    score_test "large finite time limit: full bonus"
+      ~config:{ cfg with time_limit = Float.max_float }
+      (Some 0) Float.max_float 150;
     score_test "custom points"
       ~config:{ cfg with points_top1 = 10; time_bonus_max = 0; points_top3 = 3 }
       (Some 0) 20.0 10;

@@ -27,7 +27,7 @@ val score_round : Config.t -> rank:int option -> time_left:float -> int
     - rank [Some 0]:
       [c.points_top1 + round (c.time_bonus_max * t / c.time_limit)], where [t]
       is [time_left] clamped into [[0, c.time_limit]] (NaN counts as 0). The
-      bonus is 0 if [c.time_limit <= 0].
+      bonus is 0 if [c.time_limit] is outside the finite positive range.
     - rank [Some 1] or [Some 2]: [c.points_top3], with no time bonus.
     - anything else, including [None]: 0. *)
 
