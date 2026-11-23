@@ -1,0 +1,7 @@
+(lang dune 3.24)
+(name CS3110FinalProject)
+(sections (lib .) (bin ../../bin) (doc ../../doc/CS3110FinalProject))
+(files
+ (lib (META dune-package opam))
+ (bin (CS3110FinalProject))
+ (doc (README.md)))
