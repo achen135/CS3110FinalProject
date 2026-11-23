@@ -1,0 +1,9 @@
+(executable
+ (name demo_knn)
+ (modules demo_knn)
+ (libraries quicksketch))
+
+(executable
+ (name demo_real_knn)
+ (modules demo_real_knn)
+ (libraries quicksketch))
