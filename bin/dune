@@ -7,3 +7,8 @@
  (name demo_real_knn)
  (modules demo_real_knn)
  (libraries quicksketch))
+
+(executable
+ (name draw_demo)
+ (modules draw_demo)
+ (libraries quicksketch))
