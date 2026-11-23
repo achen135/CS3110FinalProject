@@ -49,6 +49,23 @@ let load_data filename =
 
   (List.rev !training, List.rev !testing)
 
+let validate_split ~split ~expected (drawings : Knn.sample list) =
+  let counts = Array.make (Array.length categories) 0 in
+  List.iter
+    (fun (drawing : Knn.sample) ->
+      let i = category_index drawing.label in
+      counts.(i) <- counts.(i) + 1)
+    drawings;
+  Array.iteri
+    (fun i actual ->
+      if actual <> expected then (
+        Printf.eprintf
+          "Invalid dataset: expected %d %s drawings for %s, found %d.\n\
+           Run python3 scripts/prepare_quickdraw.py to regenerate the dataset.\n"
+          expected split categories.(i) actual;
+        exit 1))
+    counts
+
 (** [print_drawing features] prints 28 rows of a 28x28 grayscale drawing. Each
     pixel above [0.3] prints as [##]; every other pixel prints as spaces.
     Requires: [features] has at least 784 normalized entries. *)
@@ -71,6 +88,8 @@ let () =
     exit 1);
 
   let training, testing = load_data filename in
+  validate_split ~split:"training" ~expected:100 training;
+  validate_split ~split:"test" ~expected:25 testing;
 
   Printf.printf "Loaded %d training and %d test drawings\n"
     (List.length training) (List.length testing);

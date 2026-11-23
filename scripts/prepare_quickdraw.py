@@ -7,6 +7,7 @@ and held-out examples; it is not a random sample of the entire dataset.
 
 import ast
 import random
+import tempfile
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -103,28 +104,33 @@ def main():
 
     Every row contains split, category, and 784 comma-separated byte values.
     The fixed shuffle seed makes repeated runs reproducible.
+    Replace OUTPUT only after the complete dataset has been written.
     """
     OUTPUT.parent.mkdir(exist_ok=True)
 
-    with OUTPUT.open("w", encoding="utf-8") as file:
-        for category in CATEGORIES:
-            print("Downloading:", category)
+    temporary_file = tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", dir=OUTPUT.parent,
+        prefix=f".{OUTPUT.name}.", suffix=".tmp", delete=False,
+    )
+    temporary_path = Path(temporary_file.name)
+    try:
+        with temporary_file as file:
+            for category in CATEGORIES:
+                print("Downloading:", category)
 
-            images = load_category(category)
+                images = load_category(category)
 
-            # Shuffle the downloaded subset before making a reproducible split.
-            random.Random(3110).shuffle(images)
+                # Shuffle the downloaded subset before making a reproducible split.
+                random.Random(3110).shuffle(images)
 
-            for i, image in enumerate(images):
-                split = (
-                    "train" if i < TRAIN_PER_CATEGORY else "test"
-                )
+                for i, image in enumerate(images):
+                    split = "train" if i < TRAIN_PER_CATEGORY else "test"
+                    numbers = ",".join(str(pixel) for pixel in image)
+                    file.write(f"{split}\t{category}\t{numbers}\n")
 
-                numbers = ",".join(str(pixel) for pixel in image)
-
-                file.write(
-                    f"{split}\t{category}\t{numbers}\n"
-                )
+        temporary_path.replace(OUTPUT)
+    finally:
+        temporary_path.unlink(missing_ok=True)
 
     print("Saved", OUTPUT)
     print("500 reference drawings and 125 separate test drawings")
