@@ -1,4 +1,9 @@
-"""Download a small sample of Google's 28x28 Quick, Draw! images."""
+
+"""Prepare a small reproducible sample of Quick, Draw! 28x28 grayscale images.
+
+This downloads an initial subset per category and splits it into training
+and held-out examples; it is not a random sample of the entire dataset.
+"""
 
 import ast
 import random
@@ -17,9 +22,12 @@ PIXELS = 28 * 28
 OUTPUT = Path("data/quickdraw_demo.tsv")
 
 
-# Download only a small section of a dataset file.
-# This avoids downloading hundreds of megabytes.
 def get_bytes(url, start, end):
+    """Return bytes [start, end] inclusive, requesting an HTTP byte range.
+
+    Raise RuntimeError if the server does not return an exact partial response.
+    Network failures are propagated to the caller.
+    """
     request = urllib.request.Request(
         url,
         headers={"Range": f"bytes={start}-{end}"}
@@ -36,9 +44,13 @@ def get_bytes(url, start, end):
     return data
 
 
-# Google's images are stored in NumPy (.npy) files.
-# Read the file header, then retrieve only N images.
 def load_category(name):
+    """Return the first N 784-byte images of Google's named .npy category.
+
+    Validate the NumPy header and ensure the data represent 28x28 uint8
+    images. Raise ValueError for an unexpected format; network and range
+    errors propagate from get_bytes.
+    """
     url = (
         "https://storage.googleapis.com/"
         "quickdraw_dataset/full/numpy_bitmap/"
@@ -87,6 +99,11 @@ def load_category(name):
 
 
 def main():
+    """Write the selected training/test examples to OUTPUT in TSV format.
+
+    Every row contains split, category, and 784 comma-separated byte values.
+    The fixed shuffle seed makes repeated runs reproducible.
+    """
     OUTPUT.parent.mkdir(exist_ok=True)
 
     with OUTPUT.open("w", encoding="utf-8") as file:
@@ -95,7 +112,7 @@ def main():
 
             images = load_category(category)
 
-            # Reproducible split into reference and test images.
+            # Shuffle the downloaded subset before making a reproducible split.
             random.Random(3110).shuffle(images)
 
             for i, image in enumerate(images):
