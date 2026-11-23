@@ -1,3 +1,4 @@
 (library
- (name CS3110FinalProject)
+ (name quicksketch)
  (libraries graphics))
+

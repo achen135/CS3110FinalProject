@@ -10,7 +10,7 @@ let area_h = Drawing.height * scale
 
 let open_window () =
   open_graph (Printf.sprintf " %dx%d" area_w (area_h + text_height));
-  set_window_title "Title";
+  set_window_title "Quickdraw";
   auto_synchronize false
 
 let close_window () = try close_graph () with Graphic_failure _ -> ()

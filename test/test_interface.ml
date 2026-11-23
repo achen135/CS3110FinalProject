@@ -1,5 +1,5 @@
 open OUnit2
-open CS3110FinalProject
+open Quicksketch
 
 let pp_strokes ss =
   ss
